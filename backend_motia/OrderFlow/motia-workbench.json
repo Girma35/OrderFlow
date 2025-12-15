@@ -1,0 +1,30 @@
+[
+  {
+    "id": "hello-world-flow",
+    "config": {
+      "src/hello/log-greeting.step.js": {
+        "x": 409,
+        "y": 44
+      },
+      "src/hello/hello-api.step.ts": {
+        "x": -409,
+        "y": 0,
+        "sourceHandlePosition": "right"
+      },
+      "src/hello/process_greeting_step.py": {
+        "x": 0,
+        "y": 34,
+        "sourceHandlePosition": "right"
+      }
+    }
+  },
+  {
+    "id": "receive-order-event-flow",
+    "config": {
+      "steps\\order_submit\\order_submision_api.step.ts": {
+        "x": -327,
+        "y": 80
+      }
+    }
+  }
+]
