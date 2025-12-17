@@ -145,5 +145,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 <p align="center">
-  Built with ❤️ by the Motia Team
+  Built with ❤️ by the Girma Wakeyo
 </p>
