@@ -26,5 +26,18 @@
         "y": 80
       }
     }
+  },
+  {
+    "id": "payment-processing-flow",
+    "config": {
+      "steps\\payment_processing\\payment_processing.step.ts": {
+        "x": -6,
+        "y": -25
+      },
+      "steps\\inventory_update\\inventory_update.step.ts": {
+        "x": -26,
+        "y": 98
+      }
+    }
   }
 ]

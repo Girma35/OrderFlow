@@ -6,7 +6,7 @@ export const config: EventConfig = {
     type: 'event',
     description: 'Processes payment for received orders',
     subscribes: ['order.created'],
-    emits: ['payment.processed'],
+    emits: ['payment.processed', 'payment.failed'],
     flows: ['payment-processing-flow']
 };
 
@@ -121,7 +121,9 @@ let paymentResult: PaymentResult;
 
     logger.info('Payment completed event emitted', { paymentResult });
 }
+
 state.paymentStatus = paymentResult.status;
+
  return paymentResult;
 };
 

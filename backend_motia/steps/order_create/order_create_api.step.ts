@@ -31,15 +31,15 @@ export const config: ApiRouteConfig = {
   }
 };
 
-export const handler = async ( req:any , {emit , logger, state}:any) => {
- try {
-  logger.info('Received order submission request', { body: req.body });
+export const handler = async (req: any, { emit, logger, state }: any) => {
+  try {
+    logger.info('Received order submission request', { body: req.body });
 
-  const jobId = Math.random().toString(36).substring(7);
-  await state.set(`job ${jobId}`, {
-    status: 'pending',
-    timestamp: new Date().toISOString()
-  });
+    const jobId = Math.random().toString(36).substring(7);
+    await state.set(`job ${jobId}`, {
+      status: 'pending',
+      timestamp: new Date().toISOString()
+    }, { ttl: 60 });
 
 
     const result = orderSubmissionSchema.safeParse(req.body);
@@ -54,36 +54,36 @@ export const handler = async ( req:any , {emit , logger, state}:any) => {
       };
     }
 
-  
-  const appName = state?.appName || 'UnknownApp';
-  const timestamp = new Date().toISOString();
 
-  const order = result.data;
+    const appName = state?.appName || 'UnknownApp';
+    const timestamp = new Date().toISOString();
 
-  logger.info('Order API endpoint called', { appName, timestamp });
+    const order = result.data;
 
-  await emit({
-    topic: 'order.created',
-    data: {
-      orderId: order.orderId,
-      customerName: order.customerName,
-      items: order.items,
-      totalAmount: order.totalAmount,
-      timestamp,
-      appName,
-      requestId: Math.random().toString(36).substring(7)
-    }
-  });
-  
-  return {
-    status: 200,
-    body: {
-      success:true,
-      message: 'Order received successfully',
-      status: 'success',
-      appName:" event emitted",
-    }
-  };
+    logger.info('Order API endpoint called', { appName, timestamp });
+
+    await emit({
+      topic: 'order.created',
+      data: {
+        orderId: order.orderId,
+        customerName: order.customerName,
+        items: order.items,
+        totalAmount: order.totalAmount,
+        timestamp,
+        appName,
+        requestId: Math.random().toString(36).substring(7)
+      }
+    });
+
+    return {
+      status: 200,
+      body: {
+        success: true,
+        message: 'Order received successfully',
+        status: 'success',
+        appName: " event emitted",
+      }
+    };
   } catch (error) {
     logger.error('Error processing order submission', { error });
     return {

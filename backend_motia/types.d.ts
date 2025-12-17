@@ -12,8 +12,10 @@ declare module 'motia' {
   }
 
   interface Handlers {
-    'orderSubmissionAPI': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { message: string; status: string; appName: string }>, never>
     'paymentProcessingStep': EventHandler<never, never>
+    'orderFulfillmentStep': EventHandler<never, never>
+    'orderSubmissionAPI': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { message: string; status: string; appName: string }>, never>
+    'inventoryUpdateStep': EventHandler<never, { topic: 'inventory.updated'; data: never }>
   }
     
 }
