@@ -1,21 +1,24 @@
 import type { EventConfig } from 'motia';
 import { z } from 'zod';
-import { decreaseStock } from '../../invetory/inventory.service';
-
+import { decreaseStock } from "./../../inventory/inventory.service";
 
 const inventoryUpdateSchema = z.object({
-  productId: z.string(),
-  productName: z.string(), 
+  productName: z.string(),
   quantity: z.number().int().min(1)
+});
+
+const inventoryUpdateEventSchema = z.object({
+  orderId: z.string().uuid(),
+  items: z.array(inventoryUpdateSchema)
 });
 
 export const config: EventConfig = {
   name: 'inventoryUpdateStep',
   type: 'event',
   description: 'Updates inventory after successful payment',
-  subscribes: ['payment.completed'],
+  subscribes: ['payment.processed', 'payment.completed'],
   emits: ['inventory.updated', 'inventory.failed'],
-  flows: ['payment-processing-flow']
+  flows: ['order-processing-flow']
 };
 
 export const handler = async (
@@ -23,24 +26,41 @@ export const handler = async (
   { emit, logger, state }: any
 ) => {
 
-  if (!state.payment || state.payment.status !== 'paid') {
+  const data = input.data || input;
+
+  // Check payment status from the event data, not global state
+  if (!(data.status === 'paid')) {
+
     logger.warn('Inventory update blocked: payment not completed', {
-      payment: state.payment
+
+      paymentStatus: input.data?.status,
+
+      orderId: input.data?.orderId
+
     });
     throw new Error('Payment not completed');
   }
 
+  // check the exist items 
+
+  if (!data.items) {
+    logger.error('Inventory update failed: No items found in event data');
+    throw new Error('Missing items in payment event');
+  }
+
+
+  const { orderId, items } = inventoryUpdateEventSchema.parse(data);
+
   logger.info('Payment verified, proceeding with inventory update', {
-    orderId: input.data.orderId
+    orderId
   });
 
-  const items = z.array(inventoryUpdateSchema).parse(input.data.items);
 
   const updatedItems: {
-    productId: string;
     productName: string;
     remainingStock: number;
   }[] = [];
+
 
   try {
     for (const item of items) {
@@ -50,7 +70,6 @@ export const handler = async (
       );
 
       updatedItems.push({
-        productId: item.productId,
         productName: item.productName,
         remainingStock
       });
@@ -63,7 +82,7 @@ export const handler = async (
     await emit({
       topic: 'inventory.failed',
       data: {
-        orderId: input.data.orderId,
+        orderId,
         reason: error.message
       }
     });
@@ -79,13 +98,14 @@ export const handler = async (
   await emit({
     topic: 'inventory.updated',
     data: {
-      orderId: input.data.orderId,
+      orderId,
+      status: 'inventory_success',
       items: updatedItems
     }
   });
 
-  logger.info('Order fulfilled successfully', {
-    orderId: input.data.orderId
+  logger.info('Inventory updated successfully', {
+    orderId
   });
 
   return {

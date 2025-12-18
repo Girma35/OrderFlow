@@ -3,12 +3,11 @@ interface ProductStock {
 }
 
 export const inventory: ProductStock = {
-  "Laptop": 25,
-  "Smartphone": 50,
-  "Headphones": 75,
-  "Keyboard": 40,
-  "Monitor": 30,
-};
+  "Motia Smartwatch V2": 50,
+  "Motia IoT Sensor Kit": 30,
+  "Motia Pro Headset": 25,
+  "Motia AI Dev Board": 15,
+}
 
 export async function decreaseStock(productName: string, quantity: number) {
   if (!inventory[productName]) {

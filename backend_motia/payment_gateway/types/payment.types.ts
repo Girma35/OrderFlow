@@ -5,7 +5,7 @@ export type PaymentStatus = "success" | "failed";
 export interface FakePaymentResponse {
   status: PaymentStatus;
   transaction_id: string;
-  order_id: number;
+  orderId: string;
   amount: number;
   reason?: string;
 }

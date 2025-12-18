@@ -3,16 +3,16 @@
 import { FakePaymentResponse } from "../types/payment.types";
 
 export function processFakePayment(
-  orderId: number,
+  orderId: string,
   amount: number
 ): FakePaymentResponse {
-  const isSuccess = Math.random() > 0.3; // 70% success rate
+  const isSuccess = Math.random() > 0.0; // 70% success rate
 
   if (isSuccess) {
     return {
       status: "success",
       transaction_id: `FAKE_TXN_${Date.now()}`,
-      order_id: orderId,
+      orderId: orderId,
       amount,
     };
   }
@@ -20,7 +20,7 @@ export function processFakePayment(
   return {
     status: "failed",
     transaction_id: `FAKE_TXN_${Date.now()}`,
-    order_id: orderId,
+    orderId: orderId,
     amount,
     reason: "Payment declined",
   };

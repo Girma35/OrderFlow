@@ -6,7 +6,7 @@ const orderSubmissionSchema = z.object({
   customerName: z.string().min(1),
   items: z.array(
     z.object({
-      productId: z.string().uuid(),
+      productName: z.string().min(1),
       quantity: z.number().min(1)
     })
   ),
@@ -20,8 +20,8 @@ export const config: ApiRouteConfig = {
   path: '/api/order',
   method: 'POST',
   description: 'Receives  request and emits event',
-  emits: ['receive-order-event'],
-  flows: ['receive-order-event-flow'],
+  emits: ['order.created'],
+  flows: ['order-processing-flow'],
   responseSchema: {
     200: z.object({
       message: z.string(),
