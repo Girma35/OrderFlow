@@ -17,7 +17,7 @@ const submitOrder = async (payload: any) => {
     const response = await axios.post(
       'http://localhost:3000/api/order',
       payload,
-      { headers: { 'Content-Type': 'application/json' } }
+      { headers: { 'Content-Type': 'application/json', 'x-store-id': 'X' } }
     );
 
     return {

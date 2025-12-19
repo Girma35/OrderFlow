@@ -1,5 +1,5 @@
-import type { ApiRouteConfig, Handlers } from 'motia';
-import { success, z } from 'zod';
+import type { ApiRouteConfig,ApiMiddleware } from 'motia';
+import {z } from 'zod';
 
 const orderSubmissionSchema = z.object({
   orderId: z.string().uuid(),
@@ -13,12 +13,26 @@ const orderSubmissionSchema = z.object({
   totalAmount: z.number().min(0)
 });
 
+const authMiddleware: ApiMiddleware = async (req, { logger }, next) => {
+  const storeIdRaw = req.headers['x-store-id'];
+  const storeId = Array.isArray(storeIdRaw) ? storeIdRaw[0] : storeIdRaw;
+  // 1. Identify merchant via header
+  if (!storeId || !['X', 'Y', 'Z'].includes(storeId)) {
+    logger.error('Missing or invalid X-Store-ID header');
+    return { status: 400, body: { message: 'Invalid X-Store-ID', status: 'error' } };
+  }
+
+  (req as any).context = { ...(req as any).context, storeId };
+  logger.info(`Authenticated request for store: ${storeId}`);
+  return next();
+};
 
 export const config: ApiRouteConfig = {
   name: 'orderSubmissionAPI',
   type: 'api',
   path: '/api/order',
   method: 'POST',
+  middleware: [authMiddleware],
   description: 'Receives  request and emits event',
   emits: ['order.created'],
   flows: ['order-processing-flow'],
@@ -31,15 +45,26 @@ export const config: ApiRouteConfig = {
   }
 };
 
-export const handler = async (req: any, { emit, logger, state }: any) => {
+export const handler = async (req: any, { emit, logger, state, auth }: any) => {
   try {
     logger.info('Received order submission request', { body: req.body });
 
+    const storeIdRaw = req.headers['x-store-id'];
+    const storeId = Array.isArray(storeIdRaw) ? storeIdRaw[0] : storeIdRaw;
+    if (!storeId || !['X', 'Y', 'Z'].includes(storeId)) {
+      logger.error('Missing or invalid X-Store-ID header');
+      return {
+        status: 400,
+        body: {
+          message: 'Missing or invalid X-Store-ID header',
+          status: 'error'
+        }
+      };
+    }
+
     const jobId = Math.random().toString(36).substring(7);
-    await state.set(`job ${jobId}`, {
-      status: 'pending',
-      timestamp: new Date().toISOString()
-    }, { ttl: 60 });
+
+  
 
 
     const result = orderSubmissionSchema.safeParse(req.body);
@@ -60,6 +85,16 @@ export const handler = async (req: any, { emit, logger, state }: any) => {
 
     const order = result.data;
 
+   await state.set(
+  `public/data/${storeId}/orders/${order.orderId}`, 
+  {
+    status: 'pending',
+    ...order,
+    timestamp: new Date().toISOString()
+  }, 
+  { ttl: 60 }
+);
+
     logger.info('Order API endpoint called', { appName, timestamp });
 
     await emit({
@@ -71,6 +106,7 @@ export const handler = async (req: any, { emit, logger, state }: any) => {
         totalAmount: order.totalAmount,
         timestamp,
         appName,
+        storeId,
         requestId: Math.random().toString(36).substring(7)
       }
     });
