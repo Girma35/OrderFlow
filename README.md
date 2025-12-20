@@ -3,8 +3,10 @@
 
 ### Event-Driven Order Orchestration Engine for Multi-Tenant Commerce
 
+
 > **"This is how Stripe, Shopify, and Amazon actually handle scale."**
-> Motia OrderFlow is a high-performance orchestration engine designed to manage the complex lifecycle of e-commerce orders. Built on the **Motia Unified Backend**, it replaces brittle API chains with a robust, event-driven architecture that handles payments, inventory, and fulfillment with built-in resiliency.
+
+ Motia OrderFlow is a high-performance orchestration engine designed to manage the complex lifecycle of e-commerce orders. Built on the **Motia Unified Backend**, it replaces brittle API chains with a robust, event-driven architecture that handles payments, inventory, and fulfillment with built-in resiliency.
 
 ---
 
@@ -28,7 +30,7 @@ Motia OrderFlow is powered by **14 specialized Step modules**, unifying high-fre
 
 ---
 
-## 🧑‍💻 Technical Reference: 14 Step Modules
+##🧑‍💻 Technical Reference: 14 Step Modules
 
 The following modules in `backend_motia/steps` form the core logic of the system:
 
@@ -51,7 +53,7 @@ The following modules in `backend_motia/steps` form the core logic of the system
 
 ---
 
-## 💎 The "Wow" Factor (Judge's Highlights)
+## 💎 The "Wow" Factor 
 
 * **Resiliency & Retries:** Automatic recovery from failures using exponential backoff principles.
 * **Multi-Tenancy:** Isolated state and notifications for multiple stores via the `X-Store-ID` header.
@@ -61,14 +63,14 @@ The following modules in `backend_motia/steps` form the core logic of the system
 
 ---
 
-## 📂 Project Structure
+## 📂 Project Struct ure
 
 ```plaintext
 motia/
-├── backend_motia/          # 🧠 The Brain (Event-Driven Engine)
+├── backend_motia/          #  The Brain (Event-Driven Engine)
 │   ├── steps/              # 14 specialized business logic steps
-│   └── payment_gateway/    # 🏦 External Mock Service (Simulated Bank)
-└── front_end_next/         # 🎨 The Face (React/Vite Dashboard)
+│   └── payment_gateway/    #   External Mock Service (Simulated Bank)
+└── front_end_next/         #   The Face (React/Vite Dashboard)
 ```
 
 ---
