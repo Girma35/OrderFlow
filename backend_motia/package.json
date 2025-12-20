@@ -21,8 +21,6 @@
     "motia": "^0.17.6-beta.187",
 
     "@motiadev/core": "^0.17.6-beta.187",
-    "@motiadev/workbench": "^0.17.6-beta.187",
-
     "@motiadev/plugin-endpoint": "^0.17.6-beta.187",
     "@motiadev/plugin-states": "^0.17.6-beta.187",
     "@motiadev/plugin-logs": "^0.17.6-beta.187",
