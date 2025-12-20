@@ -52,20 +52,32 @@
     "id": "order-processing-flow",
     "config": {
       "steps\\payment_processing\\payment_processing.step.ts": {
-        "x": 0,
-        "y": 0
+        "x": 122,
+        "y": 75
       },
       "steps\\order_fulfillment\\order_fulfillment.step.ts": {
-        "x": 0,
-        "y": 0
+        "x": 1130,
+        "y": 20
       },
       "steps\\order_create\\order_create_api.step.ts": {
-        "x": 0,
-        "y": 0
+        "x": -253,
+        "y": 309
       },
       "steps\\inventory_update\\inventory_update.step.ts": {
-        "x": 0,
-        "y": 0
+        "x": 641,
+        "y": 32
+      },
+      "steps\\delivery\\delivery.step.ts": {
+        "x": 2228,
+        "y": -14
+      },
+      "steps\\db_connection\\db.step.ts": {
+        "x": 1659,
+        "y": -25
+      },
+      "steps\\alert\\alert_listener.step.ts": {
+        "x": 673,
+        "y": 456
       }
     }
   }
