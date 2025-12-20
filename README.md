@@ -30,7 +30,7 @@ Motia OrderFlow is powered by **14 specialized Step modules**, unifying high-fre
 
 ---
 
-##🧑‍💻 Technical Reference: 14 Step Modules
+Technical Reference: 14 Step Modules
 
 The following modules in `backend_motia/steps` form the core logic of the system:
 
@@ -53,7 +53,7 @@ The following modules in `backend_motia/steps` form the core logic of the system
 
 ---
 
-## 💎 The "Wow" Factor 
+ The "Wow" Factor 
 
 * **Resiliency & Retries:** Automatic recovery from failures using exponential backoff principles.
 * **Multi-Tenancy:** Isolated state and notifications for multiple stores via the `X-Store-ID` header.
