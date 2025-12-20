@@ -1,42 +1,52 @@
 {
-  "name": "OrderFlow",
-  "description": "",
+  "name": "orderflow",
+  "description": "Event-driven, multi-tenant order orchestration engine built with Motia",
   "type": "module",
   "scripts": {
-    "postinstall": "motia install",
-    "dev": "motia dev",
-    "start": "motia start",
-    "generate-types": "motia generate-types",
-    "build": "motia build",
+    "postinstall": "npx motia install",
+    "dev": "npx motia dev",
+    "build": "npx motia build",
+    "start": "npx motia start",
+    "generate-types": "npx motia generate-types",
     "clean": "rm -rf dist node_modules python_modules .motia .mermaid",
     "seed:inventory": "ts-node scripts/seed_inventory.ts"
   },
   "keywords": [
-    "motia"
+    "motia",
+    "event-driven",
+    "orchestration",
+    "ecommerce"
   ],
   "dependencies": {
-    "@motiadev/adapter-bullmq-events": "^0.17.6-beta.187",
+    "motia": "^0.17.6-beta.187",
+
     "@motiadev/core": "^0.17.6-beta.187",
-    "@motiadev/plugin-bullmq": "^0.17.6-beta.187",
+    "@motiadev/workbench": "^0.17.6-beta.187",
+
     "@motiadev/plugin-endpoint": "^0.17.6-beta.187",
+    "@motiadev/plugin-states": "^0.17.6-beta.187",
     "@motiadev/plugin-logs": "^0.17.6-beta.187",
     "@motiadev/plugin-observability": "^0.17.6-beta.187",
-    "@motiadev/plugin-states": "^0.17.6-beta.187",
-    "dotenv": "^16.6.1",
+    "@motiadev/plugin-bullmq": "^0.17.6-beta.187",
+    "@motiadev/adapter-bullmq-events": "^0.17.6-beta.187",
+
     "express": "^4.22.1",
     "mongoose": "^9.0.2",
-    "motia": "^0.17.6-beta.187",
+    "dotenv": "^16.6.1",
     "stripe": "^20.1.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@motiadev/workbench": "^0.17.6-beta.187",
-    "@types/express": "^5.0.6",
-    "@types/mongoose": "^5.11.96",
-    "@types/node": "^25.0.2",
-    "@types/react": "^19.1.1",
+    "typescript": "^5.9.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+
+    "@types/node": "^25.0.2",
+    "@types/express": "^5.0.6",
+    "@types/mongoose": "^5.11.96",
+    "@types/react": "^19.1.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
