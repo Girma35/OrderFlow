@@ -1,6 +1,7 @@
-import type { EventConfig } from 'motia';
 import { z } from 'zod';
-import { decreaseStock } from "./../../inventory/inventory.service";
+import type { EventConfig } from 'motia';
+import { connectDB } from '../../database/connection';
+import { Order, Product } from '../../database/models';
 
 const inventoryUpdateSchema = z.object({
   productName: z.string(),
@@ -55,6 +56,7 @@ export const handler = async (
     orderId
   });
 
+  await connectDB();
 
   const updatedItems: {
     productName: string;
@@ -64,16 +66,34 @@ export const handler = async (
 
   try {
     for (const item of items) {
-      const remainingStock = await decreaseStock(
-        item.productName,
-        item.quantity
+      const product = await Product.findOneAndUpdate(
+        { productName: item.productName, storeId: data.storeId },
+        { $inc: { stock: -item.quantity } },
+        { new: true }
       );
+
+      if (!product) {
+        throw new Error(`Product ${item.productName} not found in store ${data.storeId}`);
+      }
+
+      if (product.stock < 0) {
+        // Rollback (simple)
+        await Product.findOneAndUpdate(
+          { productName: item.productName, storeId: data.storeId },
+          { $inc: { stock: item.quantity } }
+        );
+        throw new Error(`Insufficient stock for ${item.productName}`);
+      }
 
       updatedItems.push({
         productName: item.productName,
-        remainingStock
+        remainingStock: product.stock
       });
     }
+
+    // Update Order Status to show inventory is cleared
+    await Order.findOneAndUpdate({ orderId }, { status: 'fulfilled' });
+
   } catch (error: any) {
     logger.error('Inventory update failed', {
       error: error.message
@@ -100,7 +120,8 @@ export const handler = async (
     data: {
       orderId,
       status: 'inventory_success',
-      items: updatedItems
+      items: updatedItems,
+      storeId: data.storeId
     }
   });
 

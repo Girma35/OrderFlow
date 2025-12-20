@@ -12,10 +12,16 @@ declare module 'motia' {
   }
 
   interface Handlers {
-    'paymentProcessingStep': EventHandler<never, { topic: 'payment.processed'; data: never }>
-    'orderFulfillmentStep': EventHandler<never, never>
+    'paymentProcessingStep': EventHandler<never, { topic: 'payment.processed'; data: never } | { topic: 'payment.failed'; data: never }>
+    'orderFulfillmentStep': EventHandler<never, { topic: 'order.completed'; data: never }>
     'orderSubmissionAPI': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { message: string; status: string; appName: string }>, { topic: 'order.created'; data: never }>
-    'inventoryUpdateStep': EventHandler<never, { topic: 'inventory.updated'; data: never }>
+    'inventoryUpdateStep': EventHandler<never, { topic: 'inventory.updated'; data: never } | { topic: 'inventory.failed'; data: never }>
+    'fraudGuard': EventHandler<never, never>
+    'orderDeliveryStep': EventHandler<never, { topic: 'delivery.shipped'; data: never } | { topic: 'delivery.delivered'; data: never }>
+    'dbSyncInventoryStep': EventHandler<never, { topic: 'delivery.shipped'; data: never } | { topic: 'delivery.delivered'; data: never }>
+    'checkInventoryStep': CronHandler<{ topic: 'inventory.threshold_reached'; data: never }>
+    'alertListener': EventHandler<never, never>
+    'alertAPI': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { alerts: Array<{ id: string; type: 'info' | 'warning' | 'error' | 'success'; title: string; message: string; timestamp: string; read: boolean }> }>, never>
   }
     
 }

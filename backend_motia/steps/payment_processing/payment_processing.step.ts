@@ -45,8 +45,6 @@ interface PaymentResult {
   timestamp: string;
 }
 
-
-
 const apiConfig: ApiRouteConfig = {
   type: 'api',
   name: 'paymentProcessingApi',
@@ -62,7 +60,6 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
   const orderId = input.orderId;
   logger.info('Processing payment for order', { orderId });
 
-  // Check if payment is already processed to prevent overcharging
   const paymentKey = `payment_${orderId}`;
   const existingPayment = await state.get(paymentKey);
   if (existingPayment && existingPayment.status === 'paid') {
@@ -78,12 +75,10 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
   let attempt = 0;
   let paymentResult: PaymentResult;
 
-  // Retry logic for failed payments
+
   while (attempt < maxRetries) {
     attempt++;
     logger.info(`Payment attempt ${attempt}/${maxRetries} for order`, { orderId });
-
-    // Simulate payment processing
     const status = Math.random() > 0.5 ? 'success' : 'failed';
     const transaction_id = Math.random().toString(36).substring(7);
     const orderId_sim = input.orderId;
@@ -91,6 +86,7 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
     const reason = status === 'failed' ? 'Insufficient funds' : undefined;
 
     logger.info('Simulated Payment API response', { status, transaction_id, orderId_sim, paidAmount, reason, attempt });
+
 
     if (status === 'success') {
       paymentResult = {
@@ -103,16 +99,19 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
 
       logger.info('Payment successful', { orderId: input.orderId });
 
+      
+
       await emit({
         topic: 'payment.processed',
         data: {
           ...paymentResult,
-          items: input.items
+          items: input.items,
+          storeId: input.storeId
         }
       });
 
       logger.info('Payment completed event emitted', { paymentResult });
-      await state.set(paymentKey, paymentResult, { ttl: 3600 }); // Store for 1 hour
+      await state.set(paymentKey, paymentResult, { ttl: 3600 });
 
       return paymentResult;
     } else {
@@ -127,10 +126,11 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
 
       if (attempt < maxRetries) {
         logger.warn(`Payment attempt ${attempt} failed, retrying in 2 seconds`, { orderId, reason });
-        // Wait 2 seconds before retry
         await new Promise(resolve => setTimeout(resolve, 2000));
       } else {
         logger.error(`Payment failed after ${maxRetries} attempts`, { orderId: input.orderId });
+
+
         await emit({
           topic: 'payment.failed',
           data: paymentResult
@@ -138,11 +138,9 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
 
         logger.info('Payment failed after all retries', { paymentResult });
 
-        await state.set(paymentKey, paymentResult, { ttl: 3600 }); // Store for 1 hour
+        await state.set(paymentKey, paymentResult, { ttl: 3600 });
         throw new Error('Payment processing failed after all retries');
       }
     }
   }
 };
-
-

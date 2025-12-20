@@ -1,5 +1,5 @@
-import type { EventConfig } from 'motia';
 import { z } from 'zod';
+import { EventConfig } from 'motia';
 
 export const config: EventConfig = {
   name: 'orderFulfillmentStep',
@@ -21,18 +21,15 @@ export const handler = async (
   const data = input.data || input;
   const { orderId } = fulfillmentInputSchema.parse(data);
 
-  // 1. Get data from Event (fast) or State (backup)
   const inventoryData = data.items || state.inventory?.updatedItems;
 
   logger.info('Starting order fulfillment process', { orderId });
 
-  // 2. Check for double-fulfillment
   if (state.fulfillment?.status === 'fulfilled') {
     logger.warn('Order already fulfilled, skipping', { orderId });
     return { orderId, status: 'already_fulfilled' };
   }
 
-  // 3. Use inventoryData (DO NOT check state.inventory separately)
   if (!inventoryData || inventoryData.length === 0) {
     logger.warn('Order fulfillment blocked: no inventory data found', { orderId });
     throw new Error('Inventory data missing');
@@ -40,23 +37,29 @@ export const handler = async (
 
   logger.info('Inventory verified, proceeding with order fulfillment', { orderId });
 
+
+
   try {
+    
+
     state.fulfillment = {
       status: 'fulfilled',
       fulfilledAt: new Date().toISOString()
     };
 
+   
     await emit({
       topic: 'order.completed',
       data: {
         orderId,
         status: 'fulfilled',
         timestamp: state.fulfillment.fulfilledAt,
-        items: inventoryData
+        items: inventoryData,
+        storeId: data.storeId
       }
     });
 
-    logger.info('Order fulfillment completed', { orderId });
+    logger.info('Order fulfillment completed in DB and state', { orderId });
 
     return { orderId, status: 'fulfilled' };
   } catch (error: any) {

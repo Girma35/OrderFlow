@@ -1,5 +1,5 @@
-import type { ApiRouteConfig,ApiMiddleware } from 'motia';
-import {z } from 'zod';
+import type { ApiRouteConfig, ApiMiddleware } from 'motia';
+import { z } from 'zod';
 
 const orderSubmissionSchema = z.object({
   orderId: z.string().uuid(),
@@ -16,7 +16,6 @@ const orderSubmissionSchema = z.object({
 const authMiddleware: ApiMiddleware = async (req, { logger }, next) => {
   const storeIdRaw = req.headers['x-store-id'];
   const storeId = Array.isArray(storeIdRaw) ? storeIdRaw[0] : storeIdRaw;
-  // 1. Identify merchant via header
   if (!storeId || !['X', 'Y', 'Z'].includes(storeId)) {
     logger.error('Missing or invalid X-Store-ID header');
     return { status: 400, body: { message: 'Invalid X-Store-ID', status: 'error' } };
@@ -26,6 +25,7 @@ const authMiddleware: ApiMiddleware = async (req, { logger }, next) => {
   logger.info(`Authenticated request for store: ${storeId}`);
   return next();
 };
+
 
 export const config: ApiRouteConfig = {
   name: 'orderSubmissionAPI',
@@ -44,6 +44,7 @@ export const config: ApiRouteConfig = {
     })
   }
 };
+
 
 export const handler = async (req: any, { emit, logger, state, auth }: any) => {
   try {
@@ -64,7 +65,7 @@ export const handler = async (req: any, { emit, logger, state, auth }: any) => {
 
     const jobId = Math.random().toString(36).substring(7);
 
-  
+
 
 
     const result = orderSubmissionSchema.safeParse(req.body);
@@ -82,20 +83,21 @@ export const handler = async (req: any, { emit, logger, state, auth }: any) => {
 
     const appName = state?.appName || 'UnknownApp';
     const timestamp = new Date().toISOString();
-
     const order = result.data;
 
-   await state.set(
-  `public/data/${storeId}/orders/${order.orderId}`, 
-  {
-    status: 'pending',
-    ...order,
-    timestamp: new Date().toISOString()
-  }, 
-  { ttl: 60 }
-);
+    
 
-    logger.info('Order API endpoint called', { appName, timestamp });
+    await state.set(
+      `public/data/${storeId}/orders/${order.orderId}`,
+      {
+        status: 'pending',
+        ...order,
+        timestamp: new Date().toISOString()
+      },
+      { ttl: 60 }
+    );
+
+    logger.info('Order saved to MongoDB and state updated', { orderId: order.orderId });
 
     await emit({
       topic: 'order.created',
