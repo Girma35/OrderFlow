@@ -21,14 +21,22 @@ export const handler = async (
   const data = input.data || input;
   const { orderId } = fulfillmentInputSchema.parse(data);
 
-  const inventoryData = data.items || state.inventory?.updatedItems;
+  if (!orderId) {
+    logger.error('Order ID missing in fulfillment', { input });
+    throw new Error('Order ID is required for fulfillment');
+  }
 
-  logger.info('Starting order fulfillment process', { orderId });
-
-  if (state.fulfillment?.status === 'fulfilled') {
+  // Idempotency check
+  const fulfillmentKey = `fulfillment_${orderId}`;
+  const existingFulfillment = await state.get(fulfillmentKey);
+  if (existingFulfillment && existingFulfillment.status === 'fulfilled') {
     logger.warn('Order already fulfilled, skipping', { orderId });
     return { orderId, status: 'already_fulfilled' };
   }
+
+  const inventoryData = data.items || state.inventory?.updatedItems;
+
+  logger.info('Starting order fulfillment process', { orderId });
 
   if (!inventoryData || inventoryData.length === 0) {
     logger.warn('Order fulfillment blocked: no inventory data found', { orderId });
@@ -40,26 +48,26 @@ export const handler = async (
 
 
   try {
-    
-
-    state.fulfillment = {
+    const fulfillmentData = {
       status: 'fulfilled',
       fulfilledAt: new Date().toISOString()
     };
 
+    // Mark as fulfilled (idempotency)
+    await state.set(fulfillmentKey, fulfillmentData, { ttl: 3600 });
    
     await emit({
       topic: 'order.completed',
       data: {
         orderId,
         status: 'fulfilled',
-        timestamp: state.fulfillment.fulfilledAt,
+        timestamp: fulfillmentData.fulfilledAt,
         items: inventoryData,
         storeId: data.storeId
       }
     });
 
-    logger.info('Order fulfillment completed in DB and state', { orderId });
+    logger.info('Order fulfillment completed', { orderId });
 
     return { orderId, status: 'fulfilled' };
   } catch (error: any) {

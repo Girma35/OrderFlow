@@ -59,7 +59,8 @@ export default function App() {
       }
     };
 
-    const interval = setInterval(pollNotifications, 3000);
+    // Poll less frequently to reduce server load
+    const interval = setInterval(pollNotifications, 10000); // Changed from 3s to 10s
     pollNotifications();
     return () => clearInterval(interval);
   }, []);
@@ -145,10 +146,19 @@ export default function App() {
 
         <main className="relative z-10">
           {view === 'submission' && (
-            <OrderFormPage onOrderSubmitted={handleOrderSubmission} isLoading={loading} />
+            <OrderFormPage 
+              onOrderSubmitted={handleOrderSubmission} 
+              isLoading={loading}
+              onNavigateToDashboard={() => setView('dashboard')}
+            />
           )}
           {view === 'tracking' && (
-            <OrderTrackingPage orderId={orderId!} formData={orderData} onReset={reset} />
+            <OrderTrackingPage 
+              orderId={orderId!} 
+              formData={orderData} 
+              onReset={reset}
+              onNavigateToDashboard={() => setView('dashboard')}
+            />
           )}
           {view === 'dashboard' && (
             <DashboardPage />

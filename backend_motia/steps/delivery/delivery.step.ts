@@ -6,7 +6,7 @@ export const config: EventConfig = {
     name: 'orderDeliveryStep',
     type: 'event',
     description: 'Triggers the delivery pipeline and tracks shipping',
-    subscribes: ['delivery.shipped', 'delivery.delivered'],
+    subscribes: ["delivery.shipped", "delivery.delivered"],
     emits: [
         'delivery.shipped', 
         'delivery.delivered'

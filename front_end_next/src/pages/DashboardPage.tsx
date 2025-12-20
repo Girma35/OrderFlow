@@ -7,23 +7,34 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     RefreshCcw,
-    Clock
+    Clock,
+    Package
 } from 'lucide-react';
 import { fetchDashboardStats } from '../utils/api';
 
 export default function DashboardPage() {
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [storeId] = useState('X'); // Default store, can be made dynamic later
 
     useEffect(() => {
         const loadStats = async () => {
             setLoading(true);
-            const data = await fetchDashboardStats();
-            setStats(data);
-            setLoading(false);
+            try {
+                const data = await fetchDashboardStats(storeId);
+                setStats(data);
+            } catch (error) {
+                console.error('Failed to load dashboard stats:', error);
+            } finally {
+                setLoading(false);
+            }
         };
         loadStats();
-    }, []);
+        
+        // Refresh stats every 30 seconds (less frequent)
+        const interval = setInterval(loadStats, 30000);
+        return () => clearInterval(interval);
+    }, [storeId]);
 
     if (loading) {
         return (
@@ -138,9 +149,9 @@ export default function DashboardPage() {
                         </button>
                     </div>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50/70 dark:bg-gray-800/50">
+                        <thead className="bg-gray-50/70 dark:bg-gray-800/50 sticky top-0 z-10">
                             <tr>
                                 <th className="px-8 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em]">Order ID</th>
                                 <th className="px-8 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em]">Customer</th>
@@ -150,7 +161,8 @@ export default function DashboardPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {stats.recentOrders.map((order: any) => {
+                            {stats.recentOrders && stats.recentOrders.length > 0 ? (
+                                stats.recentOrders.map((order: any) => {
                                 const statusClasses = order.status === 'completed'
                                     ? {
                                         bg: 'rgba(16, 185, 129, 0.15)',
@@ -185,10 +197,25 @@ export default function DashboardPage() {
                                         </td>
                                     </tr>
                                 );
-                            })}
+                            })) : (
+                                <tr>
+                                    <td colSpan={5} className="px-8 py-12 text-center text-gray-400 dark:text-gray-500">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Package size={32} className="opacity-50" />
+                                            <p className="text-sm font-medium">No orders yet</p>
+                                            <p className="text-xs">Submit an order to see it here</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
+                {stats.recentOrders && stats.recentOrders.length > 0 && (
+                    <div className="px-8 py-4 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-500 text-center">
+                        Showing {stats.recentOrders.length} {stats.recentOrders.length === 1 ? 'order' : 'orders'}
+                    </div>
+                )}
             </section>
         </div>
     );

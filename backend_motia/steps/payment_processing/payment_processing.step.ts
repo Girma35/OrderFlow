@@ -1,4 +1,6 @@
-import { EventConfig, ApiRouteConfig } from 'motia'
+import { EventConfig, ApiRouteConfig } from 'motia';
+import { connectDB } from '../../database/connection';
+import { Order } from '../../database/models';
 
 
 export const config: EventConfig = {
@@ -57,18 +59,29 @@ const apiConfig: ApiRouteConfig = {
 
 
 export const handler = async (input: any, { emit, logger, state }: any) => {
-  const orderId = input.orderId;
+  const orderId = input.orderId || input.data?.orderId;
+  
+  if (!orderId) {
+    logger.error('Order ID missing in payment processing', { input });
+    throw new Error('Order ID is required for payment processing');
+  }
+  
   logger.info('Processing payment for order', { orderId });
 
+  // Idempotency check - prevent duplicate processing
   const paymentKey = `payment_${orderId}`;
   const existingPayment = await state.get(paymentKey);
-  if (existingPayment && existingPayment.status === 'paid') {
-    logger.info('Payment already processed, skipping', { orderId });
-    return {
-      orderId,
-      status: 'already_paid',
-      message: 'Payment was already successfully processed'
-    };
+  if (existingPayment) {
+    if (existingPayment.status === 'paid') {
+      logger.info('Payment already processed, skipping', { orderId });
+      return {
+        orderId,
+        status: 'already_paid',
+        message: 'Payment was already successfully processed'
+      };
+    }
+    // If payment failed before, allow retry
+    logger.info('Previous payment attempt found, retrying', { orderId, previousStatus: existingPayment.status });
   }
 
   const maxRetries = 3;
@@ -99,7 +112,30 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
 
       logger.info('Payment successful', { orderId: input.orderId });
 
+      // Update order status in DB
+      await connectDB();
+      await Order.findOneAndUpdate(
+        { orderId: input.orderId },
+        { status: 'paid' },
+        { new: true }
+      );
+
+      // Update tracking state
+      const trackingKey = `public/data/${input.storeId}/tracking/${input.orderId}`;
+      const currentTracking = await state.get(trackingKey) || {
+        orderId: input.orderId,
+        status: 'pending',
+        history: []
+      };
       
+      await state.set(trackingKey, {
+        ...currentTracking,
+        status: 'paid',
+        history: [
+          ...(currentTracking.history || []),
+          { status: 'PAYMENT_RECEIVED', timestamp: new Date().toISOString() }
+        ]
+      }, { ttl: 3600 });
 
       await emit({
         topic: 'payment.processed',
@@ -110,7 +146,7 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
         }
       });
 
-      logger.info('Payment completed event emitted', { paymentResult });
+      logger.info('Payment completed event emitted and order updated in DB', { paymentResult });
       await state.set(paymentKey, paymentResult, { ttl: 3600 });
 
       return paymentResult;
@@ -130,13 +166,20 @@ export const handler = async (input: any, { emit, logger, state }: any) => {
       } else {
         logger.error(`Payment failed after ${maxRetries} attempts`, { orderId: input.orderId });
 
+        // Update order status in DB
+        await connectDB();
+        await Order.findOneAndUpdate(
+          { orderId: input.orderId },
+          { status: 'failed' },
+          { new: true }
+        );
 
         await emit({
           topic: 'payment.failed',
           data: paymentResult
         });
 
-        logger.info('Payment failed after all retries', { paymentResult });
+        logger.info('Payment failed after all retries, order updated in DB', { paymentResult });
 
         await state.set(paymentKey, paymentResult, { ttl: 3600 });
         throw new Error('Payment processing failed after all retries');

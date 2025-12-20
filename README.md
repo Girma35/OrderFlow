@@ -57,16 +57,19 @@ motia/
 ## ⚡ Features
 
 ### 🔌 Unified Backend (Motia)
-- **Polyglot Runtime**: Seamlessly executes TypeScript and Python steps in the same workflow.
+- **Polyglot Runtime**: Seamlessly executes TypeScript steps in event-driven workflows.
 - **Auto-scaling**: Built-in support for event-driven architecture.
-- **Workflow Engine**: Manages complex `Order -> Payment -> Fulfillment` flows automatically.
+- **Workflow Engine**: Manages complex `Order -> Payment -> Inventory -> Fulfillment -> Delivery` flows automatically.
 - **Visual Debugging**: Includes **Motia Workbench** for visualizing step executions.
+- **Fraud Detection**: Built-in fraud guard with multiple detection rules.
+- **Real-time Analytics**: Dashboard stats API with live order tracking.
 
 ### 🎨 Modern Frontend
 - **React 18**: Utilizing the latest hooks and patterns.
 - **Vite**: Lightning-fast hot module replacement (HMR).
 - **TailwindCSS**: Utility-first styling for a beautiful, responsive UI.
-- **Supabase Integration**: Ready for database and auth extensions.
+- **Real-time Updates**: Live dashboard stats and order tracking.
+- **Dark Mode**: Full dark mode support with smooth transitions.
 
 ---
 
@@ -76,28 +79,27 @@ Follow these steps to get the entire system running locally.
 
 ### Prerequisites
 - **Node.js** (v18 or higher)
-- **Python** (v3.10 or higher) - *Required for Python steps*
+- **MongoDB Atlas account** (or local MongoDB instance)
 - **npm** or **pnpm**
 
-### 1️⃣ Setup Backend
+### ⚡ Quick Start (MVP Ready)
 
-Open a new terminal for the backend engine:
-
+1. **Backend Setup:**
 ```bash
-cd backend_motia/OrderFlow
+cd backend_motia
 
 # Install dependencies
 npm install
 
+# Create .env file (REQUIRED - see .env.example)
+# Add your MongoDB URI: MONGODB_URI=mongodb+srv://...
+
 # Start the Motia Dev Server & Workbench
 npm run dev
 ```
-> The backend will be available at `http://localhost:3000` (default).
+> Backend: `http://localhost:3000` | Workbench: `http://localhost:3000/_motia`
 
-### 2️⃣ Setup Frontend
-
-Open a second terminal for the user interface:
-
+2. **Frontend Setup:**
 ```bash
 cd front_end_next
 
@@ -107,7 +109,15 @@ npm install
 # Start the Development Server
 npm run dev
 ```
-> The frontend will be available at `http://localhost:5173`.
+> Frontend: `http://localhost:5173`
+
+3. **Seed Inventory (Optional but Recommended):**
+```bash
+cd backend_motia
+npm run seed:inventory
+```
+
+**📋 For detailed setup instructions, see [MVP_SETUP.md](./MVP_SETUP.md)**
 
 ---
 

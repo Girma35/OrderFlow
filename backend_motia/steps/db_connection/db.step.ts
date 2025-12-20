@@ -22,7 +22,7 @@ const payloadSchema = z.object({
     })
   )
 });
-const handler = async (
+export const handler = async (
   input: any,
   { emit, logger, state }: any
 ) => {  
@@ -58,7 +58,7 @@ const handler = async (
     {
       orderId,
       storeId,
-      items: items.map(i => ({ productName: i.productName, quantity: (typeof i.quantity === 'number' ? i.quantity : undefined), price: (typeof i.price === 'number' ? i.price : undefined) })),
+      items: items.map(i => ({ productName: i.productName })),
       status: 'fulfilled',
       timestamp: new Date()
     },

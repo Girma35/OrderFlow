@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Send, Clock } from 'lucide-react';
+import { Send, Clock, LayoutDashboard } from 'lucide-react';
 import { generateUUID } from '../utils/api';
 
 interface OrderFormProps {
     onOrderSubmitted: (data: any) => void;
     isLoading: boolean;
+    onNavigateToDashboard: () => void;
 }
 
-const OrderFormPage: React.FC<OrderFormProps> = ({ onOrderSubmitted, isLoading }) => {
+const OrderFormPage: React.FC<OrderFormProps> = ({ onOrderSubmitted, isLoading, onNavigateToDashboard }) => {
     const [formData, setFormData] = useState({
         customerName: 'Motia Demo User',
         item: 'Motia Smartwatch V2',
@@ -154,24 +155,35 @@ const OrderFormPage: React.FC<OrderFormProps> = ({ onOrderSubmitted, isLoading }
                 {error && <div className="text-red-500 text-sm font-medium bg-red-50 dark:bg-red-900/20 p-2.5 rounded-lg border border-red-100 dark:border-red-900/50">{error}</div>}
             </div>
 
-            <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg glow-ring ${isLoading ? 'bg-gray-500/60 cursor-wait text-white' : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white'}
-                `}
-            >
-                {isLoading ? (
-                    <>
-                        <Clock className="animate-spin" size={24} />
-                        <span>Processing...</span>
-                    </>
-                ) : (
-                    <>
-                        <Send size={24} />
-                        <span>Submit Order</span>
-                    </>
-                )}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg glow-ring ${isLoading ? 'bg-gray-500/60 cursor-wait text-white' : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white'}
+                    `}
+                >
+                    {isLoading ? (
+                        <>
+                            <Clock className="animate-spin" size={24} />
+                            <span>Processing...</span>
+                        </>
+                    ) : (
+                        <>
+                            <Send size={24} />
+                            <span>Submit Order</span>
+                        </>
+                    )}
+                </button>
+                <button
+                    type="button"
+                    onClick={onNavigateToDashboard}
+                    disabled={isLoading}
+                    className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-semibold text-base transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                    <LayoutDashboard size={20} />
+                    <span>Dashboard</span>
+                </button>
+            </div>
         </form>
     );
 };

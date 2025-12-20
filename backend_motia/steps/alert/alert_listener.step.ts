@@ -6,15 +6,14 @@ import { z } from 'zod';
 export const config: EventConfig = {
     name: 'alertListener',
     type: 'event',
-    description: 'Listens for system events and creates notifications',
+    description: 'Listens for critical events and creates alerts: order creation, inventory threshold, payment failures',
     subscribes: [
-        'inventory.threshold_reached',
-        'order.completed',
-        'payment.failed',
-        'inventory.failed',
+        'order.created',           // Alert for new orders
+        'inventory.threshold_reached',  // Alert for low inventory
+        'payment.failed',          // Alert for payment failures
     ],
     emits: [],
-    flows: ['order-processing-flow', 'order-saga']
+    flows: ['order-processing-flow', 'inventory-management-flow']
 };
 
 const baseNotificationSchema = z.object({
@@ -35,53 +34,36 @@ export const handler = async (event: any, { logger, state, topic }: any) => {
 
     let notification: any = null;
 
+    // Only handle the 3 critical alert types
     switch (resolvedTopic) {
+        case 'order.created':
+            notification = {
+                type: 'info',
+                title: 'New Order Created',
+                message: `Order ${data.orderId} has been placed${data.storeId ? ` in store ${data.storeId}` : ''}.`
+            };
+            break;
+            
+        case 'inventory.threshold_reached':
+            notification = {
+                type: 'warning',
+                title: 'Low Inventory Alert',
+                message: `${data.productName || data.productId || 'Product'} is below threshold (${data.currentStock || 'N/A'} remaining, threshold: ${data.threshold || 'N/A'}) in store ${data.storeId || 'Unknown'}`
+            };
+            break;
+            
         case 'payment.failed':
             notification = {
                 type: 'error',
                 title: 'Payment Failed',
-                message: `Payment for order ${data.orderId} failed. ${data.reason || ''}`
+                message: `Payment for order ${data.orderId} failed${data.reason ? `: ${data.reason}` : ''}.`
             };
             break;
-        case 'payment.processed':
-            notification = {
-                type: 'success',
-                title: 'Payment Received',
-                message: `Payment for order ${data.orderId} was successful.`
-            };
-            break;
-        case 'inventory.failed':
-            notification = {
-                type: 'error',
-                title: 'Inventory Error',
-                message: `Could not update inventory for order ${data.orderId}.`
-            };
-            break;
-        case 'inventory.threshold_reached':
-            notification = {
-                type: 'warning',
-                title: 'Low Inventory',
-                message: `${data.productName || data.productId || 'Product'} is below threshold in store ${data.storeId}`
-            };
-            break;
-        case 'order.created':
-            notification = {
-                type: 'info',
-                title: 'Order Created',
-                message: `New order ${data.orderId} has been placed.`
-            };
-            break;
-        case 'order.completed':
-            notification = {
-                type: 'success',
-                title: 'Order Fulfilled',
-                message: `Order ${data.orderId} has been fulfilled successfully.`
-            };
-            break;
+            
         default:
-            if (logger.debug) {
-                logger.debug('No notification template for topic', { topic: resolvedTopic });
-            }
+            // Ignore other events - we only want these 3 alert types
+            logger.debug('Event not handled by alert listener', { topic: resolvedTopic });
+            return null;
     }
 
     if (!notification) {

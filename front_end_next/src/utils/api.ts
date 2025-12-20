@@ -27,36 +27,60 @@ export const submitOrder = async (payload: any) => {
 };
 
 export const fetchAlerts = async (storeId: string = 'X') => {
-    const response = await axios.get('http://localhost:3000/api/alerts', {
-        headers: { 'x-store-id': storeId }
-    });
-    return (response.data as any).alerts || [];
+    try {
+        const response = await axios.get('http://localhost:3000/api/alerts', {
+            headers: { 'x-store-id': storeId }
+        });
+        return (response.data as any).alerts || [];
+    } catch (error) {
+        console.error('Failed to fetch alerts:', error);
+        return [];
+    }
 };
 
-export const fetchDashboardStats = async () => {
-    // This will eventually call a backend endpoint
-    // For now returning mock data to build the UI
-    return {
-        totalOrders: 128,
-        activeAlerts: 3,
-        revenue: 45290.50,
-        fulfillmentRate: 98.2,
-        recentOrders: [
-            { id: 'ORD-001', customer: 'John Doe', amount: 250.00, status: 'completed', time: '2 mins ago' },
-            { id: 'ORD-002', customer: 'Jane Smith', amount: 120.50, status: 'pending', time: '15 mins ago' },
-            { id: 'ORD-003', customer: 'Alice Brown', amount: 89.00, status: 'processing', time: '45 mins ago' },
-            { id: 'ORD-004', customer: 'Bob Johnson', amount: 450.00, status: 'failed', time: '1 hour ago' },
-        ]
-    };
-};
-export const fetchOrderTracking = async (orderId: string, storeId: string = 'X') => {
+export const fetchDashboardStats = async (storeId: string = 'X') => {
     try {
-        const response = await axios.get(`http://localhost:3000/api/state/public/data/${storeId}/tracking/${orderId}`, {
+        const response = await axios.get('http://localhost:3000/api/dashboard/stats', {
             headers: { 'x-store-id': storeId }
         });
         return response.data;
     } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+        // Fallback to mock data if API fails (for demo purposes)
+        return {
+            totalOrders: 0,
+            activeAlerts: 0,
+            revenue: 0,
+            fulfillmentRate: 100,
+            recentOrders: []
+        };
+    }
+};
+
+export const fetchOrderTracking = async (orderId: string, storeId: string = 'X') => {
+    try {
+        // Ensure orderId is properly encoded in URL
+        const encodedOrderId = encodeURIComponent(orderId);
+        const response = await axios.get(`http://localhost:3000/api/order/tracking/${encodedOrderId}`, {
+            headers: { 'x-store-id': storeId }
+        });
+        // Motia API returns { status, body } structure
+        if (response.data && response.data.body) {
+            return response.data.body;
+        }
+        return response.data;
+    } catch (error: any) {
         console.error('Failed to fetch tracking:', error);
+        // Return initial state if order not found yet
+        if (error.response?.status === 404) {
+            return {
+                orderId,
+                status: 'pending',
+                history: [
+                    { status: 'ORDER_CREATED', timestamp: new Date().toISOString() }
+                ]
+            };
+        }
         return null;
     }
 };

@@ -1,5 +1,7 @@
 import type { ApiRouteConfig, ApiMiddleware } from 'motia';
 import { z } from 'zod';
+import { connectDB } from '../../database/connection';
+import { Order } from '../../database/models';
 
 const orderSubmissionSchema = z.object({
   orderId: z.string().uuid(),
@@ -85,8 +87,35 @@ export const handler = async (req: any, { emit, logger, state, auth }: any) => {
     const timestamp = new Date().toISOString();
     const order = result.data;
 
+    // Check if order already exists (idempotency check)
+    await connectDB();
+    const existingOrder = await Order.findOne({ orderId: order.orderId, storeId });
     
+    if (existingOrder) {
+      logger.warn('Order already exists, returning existing order', { orderId: order.orderId });
+      return {
+        status: 200,
+        body: {
+          success: true,
+          message: 'Order already exists',
+          status: 'success',
+          appName: "Order already processed",
+        }
+      };
+    }
 
+    // Save to MongoDB
+    await Order.create({
+      orderId: order.orderId,
+      customerName: order.customerName,
+      items: order.items,
+      totalAmount: order.totalAmount,
+      status: 'pending',
+      storeId,
+      timestamp: new Date()
+    });
+
+    // Also save to Motia State for quick access
     await state.set(
       `public/data/${storeId}/orders/${order.orderId}`,
       {
@@ -95,6 +124,19 @@ export const handler = async (req: any, { emit, logger, state, auth }: any) => {
         timestamp: new Date().toISOString()
       },
       { ttl: 60 }
+    );
+
+    // Initialize tracking state for immediate access
+    await state.set(
+      `public/data/${storeId}/tracking/${order.orderId}`,
+      {
+        orderId: order.orderId,
+        status: 'pending',
+        history: [
+          { status: 'ORDER_CREATED', timestamp: new Date().toISOString() }
+        ]
+      },
+      { ttl: 3600 }
     );
 
     logger.info('Order saved to MongoDB and state updated', { orderId: order.orderId });

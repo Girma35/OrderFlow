@@ -13,15 +13,17 @@ declare module 'motia' {
 
   interface Handlers {
     'paymentProcessingStep': EventHandler<never, { topic: 'payment.processed'; data: never } | { topic: 'payment.failed'; data: never }>
+    'orderTrackingAPI': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { orderId: string; status: string; trackingNumber?: string; history?: Array<{ status: string; timestamp: string }> }> | ApiResponse<404, { message: string; status: string }>, never>
     'orderFulfillmentStep': EventHandler<never, { topic: 'order.completed'; data: never }>
     'orderSubmissionAPI': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { message: string; status: string; appName: string }>, { topic: 'order.created'; data: never }>
-    'inventoryUpdateStep': EventHandler<never, { topic: 'inventory.updated'; data: never } | { topic: 'inventory.failed'; data: never }>
+    'inventoryUpdateStep': EventHandler<never, { topic: 'inventory.updated'; data: never }>
+    'dbInitStep': EventHandler<never, never>
     'fraudGuard': EventHandler<never, never>
     'orderDeliveryStep': EventHandler<never, { topic: 'delivery.shipped'; data: never } | { topic: 'delivery.delivered'; data: never }>
     'dbSyncInventoryStep': EventHandler<never, { topic: 'delivery.shipped'; data: never } | { topic: 'delivery.delivered'; data: never }>
+    'dashboardStatsAPI': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { totalOrders: number; revenue: number; activeAlerts: number; fulfillmentRate: number; recentOrders: Array<{ id: string; customer: string; amount: number; status: string; time: string }> }>, never>
     'checkInventoryStep': CronHandler<{ topic: 'inventory.threshold_reached'; data: never }>
     'alertListener': EventHandler<never, never>
-    'alertAPI': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { alerts: Array<{ id: string; type: 'info' | 'warning' | 'error' | 'success'; title: string; message: string; timestamp: string; read: boolean }> }>, never>
   }
     
 }

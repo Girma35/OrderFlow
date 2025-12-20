@@ -26,31 +26,41 @@ export const handler = async (
   input: any,
   { emit, logger, state }: any
 ) => {
-
   const data = input.data || input;
+
+  // Validate and parse input data
+  const { orderId, items } = inventoryUpdateEventSchema.parse(data);
+
+  if (!orderId) {
+    logger.error('Order ID missing in inventory update', { input });
+    throw new Error('Order ID is required for inventory update');
+  }
+
+  // Idempotency check - prevent duplicate inventory updates
+  const inventoryKey = `inventory_updated_${orderId}`;
+  const alreadyUpdated = await state.get(inventoryKey);
+  if (alreadyUpdated) {
+    logger.info('Inventory already updated for this order, skipping', { orderId });
+    return {
+      status: 'already_updated',
+      inventory: alreadyUpdated.items
+    };
+  }
 
   // Check payment status from the event data, not global state
   if (!(data.status === 'paid')) {
-
     logger.warn('Inventory update blocked: payment not completed', {
-
-      paymentStatus: input.data?.status,
-
-      orderId: input.data?.orderId
-
+      paymentStatus: data.status,
+      orderId: orderId
     });
     throw new Error('Payment not completed');
   }
 
-  // check the exist items 
-
-  if (!data.items) {
+  // Validate items exist
+  if (!items || items.length === 0) {
     logger.error('Inventory update failed: No items found in event data');
     throw new Error('Missing items in payment event');
   }
-
-
-  const { orderId, items } = inventoryUpdateEventSchema.parse(data);
 
   logger.info('Payment verified, proceeding with inventory update', {
     orderId
@@ -93,6 +103,30 @@ export const handler = async (
 
     // Update Order Status to show inventory is cleared
     await Order.findOneAndUpdate({ orderId }, { status: 'fulfilled' });
+
+    // Mark inventory as updated (idempotency)
+    await state.set(inventoryKey, {
+      orderId,
+      items: updatedItems,
+      updatedAt: new Date().toISOString()
+    }, { ttl: 3600 });
+
+    // Update tracking state
+    const trackingKey = `public/data/${data.storeId}/tracking/${orderId}`;
+    const currentTracking = await state.get(trackingKey) || {
+      orderId,
+      status: 'pending',
+      history: []
+    };
+    
+    await state.set(trackingKey, {
+      ...currentTracking,
+      status: 'fulfilled',
+      history: [
+        ...(currentTracking.history || []),
+        { status: 'INVENTORY_RESERVED', timestamp: new Date().toISOString() }
+      ]
+    }, { ttl: 3600 });
 
   } catch (error: any) {
     logger.error('Inventory update failed', {

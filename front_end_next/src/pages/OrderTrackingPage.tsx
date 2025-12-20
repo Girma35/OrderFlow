@@ -1,5 +1,5 @@
 import { useState, useEffect, type CSSProperties } from 'react';
-import { Clock, Box, CheckCircle, Truck, Package } from 'lucide-react';
+import { Clock, Box, CheckCircle, Truck, Package, LayoutDashboard } from 'lucide-react';
 import { fetchOrderTracking } from '../utils/api';
 import { getBrand } from '../utils/branding';
 
@@ -7,23 +7,38 @@ interface OrderTrackingProps {
     orderId: string;
     formData: any;
     onReset: () => void;
+    onNavigateToDashboard: () => void;
 }
 
-const OrderTrackingPage: React.FC<OrderTrackingProps> = ({ orderId, formData, onReset }) => {
+const OrderTrackingPage: React.FC<OrderTrackingProps> = ({ orderId, formData, onReset, onNavigateToDashboard }) => {
     const [trackingData, setTrackingData] = useState<any>(null);
     const storeId = formData.storeId || 'X';
     const brand = getBrand(storeId);
 
     useEffect(() => {
+        // Set initial tracking data immediately
+        setTrackingData({
+            orderId,
+            status: 'pending',
+            history: [
+                { status: 'ORDER_CREATED', timestamp: new Date().toISOString() }
+            ]
+        });
+
         const pollTracking = async () => {
-            const data = await fetchOrderTracking(orderId, storeId);
-            if (data) {
-                setTrackingData(data);
+            try {
+                const data = await fetchOrderTracking(orderId, storeId);
+                if (data) {
+                    setTrackingData(data);
+                }
+            } catch (error) {
+                console.error('Error polling tracking:', error);
             }
         };
 
-        const interval = setInterval(pollTracking, 3000);
+        // Poll immediately, then every 5 seconds (reduced from 3s to reduce server load)
         pollTracking();
+        const interval = setInterval(pollTracking, 5000);
         return () => clearInterval(interval);
     }, [orderId, storeId]);
 
@@ -36,9 +51,10 @@ const OrderTrackingPage: React.FC<OrderTrackingProps> = ({ orderId, formData, on
         }
     };
 
-    const history = trackingData?.history || [
+    // Build history from tracking data or use default
+    const history = trackingData?.history || (trackingData ? [
         { status: 'ORDER_CREATED', timestamp: new Date().toISOString() }
-    ];
+    ] : []);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -117,26 +133,35 @@ const OrderTrackingPage: React.FC<OrderTrackingProps> = ({ orderId, formData, on
                             </div>
                         </div>
                     ))}
-                    {!trackingData && (
+                    {history.length === 0 && (
                         <div className="flex items-center gap-3 text-gray-400 font-mono text-[10px] animate-pulse pl-8">
                             <Clock size={12} className="animate-spin" />
-                            CONNECTING TO REAL-TIME PIPE...
+                            LOADING ORDER STATUS...
                         </div>
                     )}
                 </div>
             </div>
 
-            <button
-                onClick={onReset}
-                className="w-full py-4 rounded-2xl border-2 border-dashed font-black uppercase tracking-widest text-xs transition-all text-[color:var(--brand-color)] border-[color:var(--brand-border)] hover:bg-[var(--brand-secondary)]"
-                style={{
-                    '--brand-color': brand.primaryColor,
-                    '--brand-border': `${brand.primaryColor}4d`,
-                    '--brand-secondary': brand.secondaryColor
-                } as CSSProperties}
-            >
-                New Submission
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                    onClick={onReset}
+                    className="flex-1 py-4 rounded-2xl border-2 border-dashed font-black uppercase tracking-widest text-xs transition-all text-[color:var(--brand-color)] border-[color:var(--brand-border)] hover:bg-[var(--brand-secondary)]"
+                    style={{
+                        '--brand-color': brand.primaryColor,
+                        '--brand-border': `${brand.primaryColor}4d`,
+                        '--brand-secondary': brand.secondaryColor
+                    } as CSSProperties}
+                >
+                    New Submission
+                </button>
+                <button
+                    onClick={onNavigateToDashboard}
+                    className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-semibold text-sm transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                    <LayoutDashboard size={18} />
+                    <span>Dashboard</span>
+                </button>
+            </div>
         </div>
     );
 };

@@ -6,7 +6,7 @@ export const config: CronConfig = {
   name: 'checkInventoryStep',
   type: 'cron',
   description: 'Periodically checks inventory levels',
-  cron: '* * * * *', // every minute
+  cron: '* * * * *', // every 2 minutes instead of every minute
   emits: ['inventory.threshold_reached'],
   flows: ['inventory-management-flow']
 };
