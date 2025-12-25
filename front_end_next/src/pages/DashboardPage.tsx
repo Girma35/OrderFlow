@@ -30,7 +30,7 @@ export default function DashboardPage() {
             }
         };
         loadStats();
-        
+
         // Refresh stats every 30 seconds (less frequent)
         const interval = setInterval(loadStats, 30000);
         return () => clearInterval(interval);
@@ -102,7 +102,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {cards.map((card, i) => (
+                {cards.map((card) => (
                     <article
                         key={card.title}
                         className="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:translate-y-[-4px] transition-all duration-300"
@@ -163,41 +163,41 @@ export default function DashboardPage() {
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {stats.recentOrders && stats.recentOrders.length > 0 ? (
                                 stats.recentOrders.map((order: any) => {
-                                const statusClasses = order.status === 'completed'
-                                    ? {
-                                        bg: 'rgba(16, 185, 129, 0.15)',
-                                        text: '#10b981'
-                                    }
-                                    : order.status === 'failed'
-                                        ? { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' }
-                                        : { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6' };
+                                    const statusClasses = order.status === 'completed'
+                                        ? {
+                                            bg: 'rgba(16, 185, 129, 0.15)',
+                                            text: '#10b981'
+                                        }
+                                        : order.status === 'failed'
+                                            ? { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' }
+                                            : { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6' };
 
-                                return (
-                                    <tr key={order.id} className="hover:bg-gray-50/80 dark:hover:bg-gray-800/30 transition-colors group cursor-pointer">
-                                        <td className="px-8 py-5 text-sm font-bold text-blue-600 dark:text-blue-400">{order.id}</td>
-                                        <td className="px-8 py-5 text-sm font-medium text-gray-900 dark:text-white">{order.customer}</td>
-                                        <td className="px-8 py-5 text-sm font-bold text-gray-900 dark:text-white">${order.amount.toFixed(2)}</td>
-                                        <td className="px-8 py-5">
-                                            <span
-                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
-                                                style={{ backgroundColor: statusClasses.bg, color: statusClasses.text }}
-                                            >
+                                    return (
+                                        <tr key={order.id} className="hover:bg-gray-50/80 dark:hover:bg-gray-800/30 transition-colors group cursor-pointer">
+                                            <td className="px-8 py-5 text-sm font-bold text-blue-600 dark:text-blue-400">{order.id}</td>
+                                            <td className="px-8 py-5 text-sm font-medium text-gray-900 dark:text-white">{order.customer}</td>
+                                            <td className="px-8 py-5 text-sm font-bold text-gray-900 dark:text-white">${order.amount.toFixed(2)}</td>
+                                            <td className="px-8 py-5">
                                                 <span
-                                                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                                                    style={{ backgroundColor: statusClasses.text }}
-                                                />
-                                                {order.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5 text-sm text-gray-500 dark:text-gray-400">
-                                            <div className="flex items-center gap-1.5">
-                                                <Clock size={14} />
-                                                {order.time}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })) : (
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                                                    style={{ backgroundColor: statusClasses.bg, color: statusClasses.text }}
+                                                >
+                                                    <span
+                                                        className="w-1.5 h-1.5 rounded-full animate-pulse"
+                                                        style={{ backgroundColor: statusClasses.text }}
+                                                    />
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-5 text-sm text-gray-500 dark:text-gray-400">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock size={14} />
+                                                    {order.time}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })) : (
                                 <tr>
                                     <td colSpan={5} className="px-8 py-12 text-center text-gray-400 dark:text-gray-500">
                                         <div className="flex flex-col items-center gap-2">

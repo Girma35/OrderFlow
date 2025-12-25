@@ -5,7 +5,7 @@ import Footer from './components/Footer';
 import NotificationPopup, { Notification } from './components/NotificationPopup';
 import OrderFormPage from './pages/OrderFormPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
-import DashboardPage from './pages/DashboardPage';
+import UnifiedDashboard from './pages/UnifiedDashboard';
 import { submitOrder, fetchAlerts } from './utils/api';
 import { LayoutDashboard, Send, MapPin } from 'lucide-react';
 
@@ -146,22 +146,22 @@ export default function App() {
 
         <main className="relative z-10">
           {view === 'submission' && (
-            <OrderFormPage 
-              onOrderSubmitted={handleOrderSubmission} 
+            <OrderFormPage
+              onOrderSubmitted={handleOrderSubmission}
               isLoading={loading}
               onNavigateToDashboard={() => setView('dashboard')}
             />
           )}
           {view === 'tracking' && (
-            <OrderTrackingPage 
-              orderId={orderId!} 
-              formData={orderData} 
+            <OrderTrackingPage
+              orderId={orderId!}
+              formData={orderData}
               onReset={reset}
               onNavigateToDashboard={() => setView('dashboard')}
             />
           )}
           {view === 'dashboard' && (
-            <DashboardPage />
+            <UnifiedDashboard />
           )}
 
           {error && (

@@ -65,8 +65,9 @@ export const fetchOrderTracking = async (orderId: string, storeId: string = 'X')
             headers: { 'x-store-id': storeId }
         });
         // Motia API returns { status, body } structure
-        if (response.data && response.data.body) {
-            return response.data.body;
+        const responseData = response.data as any;
+        if (responseData && responseData.body) {
+            return responseData.body;
         }
         return response.data;
     } catch (error: any) {

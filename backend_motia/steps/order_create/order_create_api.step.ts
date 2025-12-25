@@ -17,7 +17,9 @@ const orderSubmissionSchema = z.object({
 
 const authMiddleware: ApiMiddleware = async (req, { logger }, next) => {
   const storeIdRaw = req.headers['x-store-id'];
+
   const storeId = Array.isArray(storeIdRaw) ? storeIdRaw[0] : storeIdRaw;
+
   if (!storeId || !['X', 'Y', 'Z'].includes(storeId)) {
     logger.error('Missing or invalid X-Store-ID header');
     return { status: 400, body: { message: 'Invalid X-Store-ID', status: 'error' } };
@@ -71,6 +73,7 @@ export const handler = async (req: any, { emit, logger, state, auth }: any) => {
 
 
     const result = orderSubmissionSchema.safeParse(req.body);
+
     if (!result.success) {
       logger.error('Invalid request body', { errors: result.error });
       return {
@@ -87,7 +90,6 @@ export const handler = async (req: any, { emit, logger, state, auth }: any) => {
     const timestamp = new Date().toISOString();
     const order = result.data;
 
-    // Check if order already exists (idempotency check)
     await connectDB();
     const existingOrder = await Order.findOne({ orderId: order.orderId, storeId });
     
@@ -115,7 +117,6 @@ export const handler = async (req: any, { emit, logger, state, auth }: any) => {
       timestamp: new Date()
     });
 
-    // Also save to Motia State for quick access
     await state.set(
       `public/data/${storeId}/orders/${order.orderId}`,
       {

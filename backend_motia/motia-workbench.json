@@ -56,8 +56,8 @@
         "y": 75
       },
       "steps\\order_fulfillment\\order_fulfillment.step.ts": {
-        "x": 1130,
-        "y": 20
+        "x": 1133,
+        "y": 16
       },
       "steps\\order_create\\order_create_api.step.ts": {
         "x": -253,
